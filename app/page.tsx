@@ -117,7 +117,7 @@ export default async function Home() {
             </div>
 
             <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-              Seorang UI/UX Designer dan Web Developer yang passionate dalam menciptakan desain interface yang menarik dan memberikan pengalaman pengguna yang intuitif untuk aplikasi web modern.
+              A UI/UX designer and web developer passionate about creating engaging interface designs and delivering intuitive user experiences for modern web applications.
             </p>
 
             <div className="flex gap-4 justify-center flex-wrap pt-4 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
