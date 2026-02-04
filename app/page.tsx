@@ -249,7 +249,7 @@ export default async function Home() {
               <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary via-primary/50 to-transparent hidden md:block" />
 
               <div className="space-y-12">
-                {experiences.map((experience, index) => (
+                {[...experiences].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()).map((experience, index) => (
                   <div key={experience.id} className="relative flex items-start gap-8">
                     {/* Timeline dot */}
                     <div className="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center shadow-lg z-10 border-4 border-background">
@@ -263,8 +263,13 @@ export default async function Home() {
                           <h3 className="text-xl font-bold text-foreground mb-1">{experience.title}</h3>
                           <p className="text-primary font-semibold text-lg">{experience.company}</p>
                         </div>
-                        <div className="text-sm text-muted-foreground bg-background/50 px-3 py-1 rounded-full font-medium">
-                          {new Date(experience.start_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short' })} - {experience.end_date ? new Date(experience.end_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short' }) : 'Present'}
+                        <div className="flex flex-col gap-2 text-right">
+                          <div className="text-sm text-muted-foreground bg-background/50 px-3 py-1 rounded-full font-medium">
+                            {new Date(experience.start_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short' })} - {experience.end_date ? new Date(experience.end_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short' }) : 'Present'}
+                          </div>
+                          {/* <div className="text-xs text-muted-foreground/70">
+                            Added {new Date(experience.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })} at {new Date(experience.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                          </div> */}
                         </div>
                       </div>
                       <p className="text-muted-foreground leading-relaxed">

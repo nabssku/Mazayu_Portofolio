@@ -452,7 +452,7 @@ export async function getExperiences() {
   const { data, error } = await supabase
     .from('experiences')
     .select('*')
-    .order('start_date', { ascending: false });
+    .order('created_at', { ascending: false });
 
   if (error) {
     return { error: error.message, data: [] };
