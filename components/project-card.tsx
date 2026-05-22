@@ -59,33 +59,33 @@ export default function ProjectCard({
         </div>
 
         {/* Premium Large Mockup — right side */}
-        <div className="absolute hidden sm:flex sm:items-center sm:justify-start top-0 right-[-10%] h-full w-[65%] transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-[1.03] group-hover:-translate-x-6">
+        <div className="absolute hidden sm:flex sm:items-center sm:justify-center top-0 right-0 h-full w-[60%] transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-[1.03] group-hover:-translate-x-4">
           {isMobile ? (
-            /* Premium iPhone 15 Pro style Mockup (Larger) */
-            <div className="relative border-[#1e1e1e] bg-[#1e1e1e] border-[9px] rounded-[3.5rem] h-[22rem] w-[10.8rem] shadow-[0_30px_70px_rgba(0,0,0,0.4)] flex-shrink-0 outline outline-1 outline-white/20 ml-12">
-              {/* Dynamic Island */}
-              <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-16 h-4 bg-black rounded-full z-20 flex items-center justify-end px-2">
-                <div className="w-1.5 h-1.5 bg-blue-500/20 rounded-full blur-[1px]"></div>
+            /* Premium iPhone 15 Pro style Mockup (Corrected Proportions) */
+            <div className="relative border-[#0f0f0f] bg-[#0f0f0f] border-[7px] rounded-[3.2rem] h-[24rem] w-[11.1rem] shadow-[0_40px_80px_-15px_rgba(0,0,0,0.5)] flex-shrink-0 outline outline-1 outline-white/10">
+              {/* Dynamic Island - Subtle & Sleek */}
+              <div className="absolute top-3 left-1/2 -translate-x-1/2 w-14 h-4 bg-black rounded-full z-20 flex items-center justify-center border border-white/5">
+                <div className="w-1 h-1 bg-[#1a1a1a] rounded-full mr-1"></div>
               </div>
               
-              {/* Buttons */}
-              <div className="w-[3px] h-[1.4rem] bg-[#2a2a2a] absolute -left-[12px] top-[4.5rem] rounded-l-md border-r border-white/10"></div>
-              <div className="w-[3px] h-[2.2rem] bg-[#2a2a2a] absolute -left-[12px] top-[6.8rem] rounded-l-md border-r border-white/10"></div>
-              <div className="w-[3px] h-[2.2rem] bg-[#2a2a2a] absolute -left-[12px] top-[9.5rem] rounded-l-md border-r border-white/10"></div>
-              <div className="w-[3px] h-[2.8rem] bg-[#2a2a2a] absolute -right-[12px] top-[7.5rem] rounded-r-md border-l border-white/10"></div>
+              {/* Buttons - More subtle */}
+              <div className="w-[2px] h-[1.2rem] bg-[#1a1a1a] absolute -left-[9px] top-[4.5rem] rounded-l-sm border-r border-white/5"></div>
+              <div className="w-[2px] h-[2rem] bg-[#1a1a1a] absolute -left-[9px] top-[6.5rem] rounded-l-sm border-r border-white/5"></div>
+              <div className="w-[2px] h-[2rem] bg-[#1a1a1a] absolute -left-[9px] top-[9rem] rounded-l-sm border-r border-white/5"></div>
+              <div className="w-[2px] h-[2.5rem] bg-[#1a1a1a] absolute -right-[9px] top-[7rem] rounded-r-sm border-l border-white/5"></div>
               
               {/* Screen */}
               <div className="rounded-[2.8rem] overflow-hidden w-full h-full bg-black relative">
                 <Image
                   src={imageUrl}
                   alt="Project Phone Mockup"
-                  className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                  className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-[1.03]"
                   quality={100}
                   width={400}
                   height={800}
                 />
                 {/* Screen Reflection overlay */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-transparent pointer-events-none"></div>
+                <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-transparent pointer-events-none z-10"></div>
               </div>
             </div>
           ) : (
