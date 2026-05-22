@@ -20,7 +20,7 @@ interface SocialLink {
   platform: string;
   url: string;
   icon: string | null;
-  created_at: string;
+  created_at: Date | string;
 }
 
 interface SocialLinksTableProps {

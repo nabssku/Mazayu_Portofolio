@@ -19,7 +19,7 @@ interface ShortLink {
   slug: string;
   original_url: string;
   clicks: number;
-  created_at: string;
+  created_at: Date | string;
 }
 
 interface ShortLinksTableProps {

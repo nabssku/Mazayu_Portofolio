@@ -22,7 +22,7 @@ interface Experience {
   start_date: string;
   end_date: string | null;
   description: string;
-  created_at: string;
+  created_at: Date | string;
 }
 
 interface ExperiencesTableProps {

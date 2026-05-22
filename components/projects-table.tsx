@@ -23,7 +23,7 @@ interface Project {
   description: string;
   image_url: string;
   demo_link: string | null;
-  created_at: string;
+  created_at: Date | string;
 }
 
 interface ProjectsTableProps {

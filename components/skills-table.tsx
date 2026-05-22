@@ -20,7 +20,7 @@ interface Skill {
   name: string;
   category: string;
   level: string;
-  created_at: string;
+  created_at: Date | string;
 }
 
 interface SkillsTableProps {
