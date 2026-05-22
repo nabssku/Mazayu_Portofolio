@@ -197,7 +197,7 @@ export default async function Home() {
                     <p className="text-sm text-muted-foreground">Projects Completed</p>
                   </div>
                   <div className="p-4 bg-muted/50 rounded-xl border border-border/40">
-                    <p className="text-3xl font-bold text-primary">5+</p>
+                    <p className="text-3xl font-bold text-primary">3+</p>
                     <p className="text-sm text-muted-foreground">Years Experience</p>
                   </div>
                 </div>
