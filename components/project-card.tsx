@@ -56,40 +56,47 @@ export default function ProjectCard({
           </ul>
         </div>
 
-        <div className={`absolute hidden sm:block top-8 -right-40 w-[28.25rem] transition group-hover:scale-[1.04] group-hover:-translate-x-3 group-hover:translate-y-3 group-hover:-rotate-2`}>
+        {/* Mockup container: positioned on the right half, vertically centered */}
+        <div className="absolute hidden sm:flex sm:items-center sm:justify-center top-0 right-0 h-full w-[55%] transition group-hover:scale-[1.04] group-hover:-translate-x-2 group-hover:translate-y-2 group-hover:-rotate-2 overflow-hidden">
           {isMobile ? (
-            /* iPhone Mockup */
-            <div className="relative mx-auto border-gray-800 dark:border-gray-800 bg-gray-800 border-[14px] rounded-[2.5rem] h-[30rem] w-[15rem] shadow-xl">
-              <div className="w-[3px] h-[32px] bg-gray-800 absolute -left-[17px] top-[72px] rounded-l-lg"></div>
-              <div className="w-[3px] h-[46px] bg-gray-800 absolute -left-[17px] top-[124px] rounded-l-lg"></div>
-              <div className="w-[3px] h-[46px] bg-gray-800 absolute -left-[17px] top-[178px] rounded-l-lg"></div>
-              <div className="w-[3px] h-[64px] bg-gray-800 absolute -right-[17px] top-[142px] rounded-r-lg"></div>
-              <div className="rounded-[2rem] overflow-hidden w-full h-full bg-white dark:bg-gray-800">
+            /* iPhone Mockup — scaled to ~11rem tall */
+            <div className="relative border-gray-800 bg-gray-800 border-[10px] rounded-[2rem] h-[11rem] w-[5.5rem] shadow-xl flex-shrink-0">
+              {/* Side buttons */}
+              <div className="w-[2px] h-[1.2rem] bg-gray-700 absolute -left-[12px] top-[1.8rem] rounded-l-lg"></div>
+              <div className="w-[2px] h-[1.6rem] bg-gray-700 absolute -left-[12px] top-[3.4rem] rounded-l-lg"></div>
+              <div className="w-[2px] h-[1.6rem] bg-gray-700 absolute -left-[12px] top-[5.4rem] rounded-l-lg"></div>
+              <div className="w-[2px] h-[2.2rem] bg-gray-700 absolute -right-[12px] top-[4rem] rounded-r-lg"></div>
+              {/* Screen */}
+              <div className="rounded-[1.4rem] overflow-hidden w-full h-full bg-white dark:bg-gray-800">
                 <Image
                   src={imageUrl}
                   alt="Project Phone Mockup"
                   className="w-full h-full object-cover"
                   quality={95}
-                  width={300}
-                  height={600}
+                  width={220}
+                  height={440}
                 />
               </div>
             </div>
           ) : (
-            /* Macbook Mockup */
-            <div className="relative mx-auto border-gray-800 dark:border-gray-800 bg-gray-800 border-[8px] rounded-t-xl h-[18rem] w-[28rem]">
-              <div className="rounded-lg overflow-hidden h-full bg-white dark:bg-gray-800">
-                <Image
-                  src={imageUrl}
-                  alt="Project Laptop Mockup"
-                  className="w-full h-full object-cover"
-                  quality={95}
-                  width={600}
-                  height={400}
-                />
+            /* Macbook Mockup — scaled to fit card height */
+            <div className="w-full px-2">
+              {/* Screen */}
+              <div className="border-gray-800 bg-gray-800 border-[6px] rounded-t-lg w-full" style={{ aspectRatio: '16/10' }}>
+                <div className="overflow-hidden w-full h-full rounded-sm bg-white dark:bg-gray-800">
+                  <Image
+                    src={imageUrl}
+                    alt="Project Laptop Mockup"
+                    className="w-full h-full object-cover"
+                    quality={95}
+                    width={600}
+                    height={375}
+                  />
+                </div>
               </div>
-              <div className="relative mx-auto bg-gray-900 dark:bg-gray-700 rounded-b-xl rounded-t-sm h-[12px] w-[32rem] -left-[2rem]"></div>
-              <div className="relative mx-auto bg-gray-800 dark:bg-gray-600 rounded-b-md h-[4px] w-[4rem] -left-[2rem]"></div>
+              {/* Base */}
+              <div className="bg-gray-900 dark:bg-gray-700 rounded-b-lg h-[5px] w-full"></div>
+              <div className="bg-gray-800 dark:bg-gray-600 rounded-b-md h-[3px] w-1/4 mx-auto"></div>
             </div>
           )}
         </div>
