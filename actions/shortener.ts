@@ -1,27 +1,25 @@
 'use server';
 
-import { createClient } from '@supabase/supabase-js';
+import { db } from '@/lib/db';
+import { shortLinks } from '@/lib/db/schema';
+import { eq, sql } from 'drizzle-orm';
 
 export async function incrementClickAndGetUrl(slug: string): Promise<string | null> {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  try {
+    const link = await db.query.shortLinks.findFirst({
+      where: eq(shortLinks.slug, slug),
+    });
 
-  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    if (!link) {
+      return null;
+    }
 
-  const { data: link, error } = await supabase
-    .from('short_links')
-    .select('original_url, clicks')
-    .eq('slug', slug)
-    .maybeSingle();
+    await db.update(shortLinks)
+      .set({ clicks: sql`${shortLinks.clicks} + 1` })
+      .where(eq(shortLinks.slug, slug));
 
-  if (error || !link) {
+    return link.original_url;
+  } catch (error) {
     return null;
   }
-
-  await supabase
-    .from('short_links')
-    .update({ clicks: (link.clicks || 0) + 1 })
-    .eq('slug', slug);
-
-  return link.original_url;
 }

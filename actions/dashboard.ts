@@ -1,8 +1,12 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { db } from '@/lib/db';
+import { projects, shortLinks, skills, experiences, about, seoSettings, socialLinks } from '@/lib/db/schema';
 import { revalidatePath } from 'next/cache';
+import { uploadImage } from '@/lib/cloudinary';
+import { eq, desc, sql } from 'drizzle-orm';
 
+// Projects actions
 export async function createProject(formData: FormData) {
   const title = formData.get('title') as string;
   const description = formData.get('description') as string;
@@ -13,64 +17,34 @@ export async function createProject(formData: FormData) {
     return { error: 'All fields are required' };
   }
 
-  const supabase = await createClient();
+  try {
+    const image_url = await uploadImage(image);
 
-  const fileExt = image.name.split('.').pop();
-  const fileName = `${Math.random()}.${fileExt}`;
-  const filePath = `${fileName}`;
-
-  const { error: uploadError } = await supabase.storage
-    .from('portfolio')
-    .upload(filePath, image, {
-      cacheControl: '3600',
-      upsert: false,
+    await db.insert(projects).values({
+      title,
+      description,
+      image_url,
+      demo_link: demo_link || null,
     });
 
-  if (uploadError) {
-    return { error: uploadError.message };
+    revalidatePath('/');
+    revalidatePath('/dashboard');
+
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message };
   }
-
-  const { data: { publicUrl } } = supabase.storage
-    .from('portfolio')
-    .getPublicUrl(filePath);
-
-  const { error: insertError } = await supabase
-    .from('projects')
-    .insert([
-      {
-        title,
-        description,
-        image_url: publicUrl,
-        demo_link: demo_link || null,
-      },
-    ]);
-
-  if (insertError) {
-    return { error: insertError.message };
-  }
-
-  revalidatePath('/');
-  revalidatePath('/dashboard');
-
-  return { success: true };
 }
 
 export async function deleteProject(id: string) {
-  const supabase = await createClient();
-
-  const { error } = await supabase
-    .from('projects')
-    .delete()
-    .eq('id', id);
-
-  if (error) {
+  try {
+    await db.delete(projects).where(eq(projects.id, id));
+    revalidatePath('/');
+    revalidatePath('/dashboard');
+    return { success: true };
+  } catch (error: any) {
     return { error: error.message };
   }
-
-  revalidatePath('/');
-  revalidatePath('/dashboard');
-
-  return { success: true };
 }
 
 export async function updateProject(formData: FormData) {
@@ -84,58 +58,47 @@ export async function updateProject(formData: FormData) {
     return { error: 'ID, title, and description are required' };
   }
 
-  const supabase = await createClient();
-
-  let image_url = null;
-
-  if (image && image.size > 0) {
-    const fileExt = image.name.split('.').pop();
-    const fileName = `${Math.random()}.${fileExt}`;
-    const filePath = `${fileName}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from('portfolio')
-      .upload(filePath, image, {
-        cacheControl: '3600',
-        upsert: false,
-      });
-
-    if (uploadError) {
-      return { error: uploadError.message };
+  try {
+    let image_url = null;
+    if (image && image.size > 0) {
+      image_url = await uploadImage(image);
     }
 
-    const { data: { publicUrl } } = supabase.storage
-      .from('portfolio')
-      .getPublicUrl(filePath);
+    const updateData: any = {
+      title,
+      description,
+      demo_link: demo_link || null,
+    };
 
-    image_url = publicUrl;
-  }
+    if (image_url) {
+      updateData.image_url = image_url;
+    }
 
-  const updateData: any = {
-    title,
-    description,
-    demo_link: demo_link || null,
-  };
+    await db.update(projects)
+      .set(updateData)
+      .where(eq(projects.id, id));
 
-  if (image_url) {
-    updateData.image_url = image_url;
-  }
+    revalidatePath('/');
+    revalidatePath('/dashboard');
 
-  const { error } = await supabase
-    .from('projects')
-    .update(updateData)
-    .eq('id', id);
-
-  if (error) {
+    return { success: true };
+  } catch (error: any) {
     return { error: error.message };
   }
-
-  revalidatePath('/');
-  revalidatePath('/dashboard');
-
-  return { success: true };
 }
 
+export async function getProjects() {
+  try {
+    const data = await db.query.projects.findMany({
+      orderBy: [desc(projects.created_at)],
+    });
+    return { data };
+  } catch (error: any) {
+    return { error: error.message, data: [] };
+  }
+}
+
+// Short Links actions
 export async function createShortLink(formData: FormData) {
   const slug = formData.get('slug') as string;
   const original_url = formData.get('original_url') as string;
@@ -144,126 +107,80 @@ export async function createShortLink(formData: FormData) {
     return { error: 'Slug and URL are required' };
   }
 
-  const supabase = await createClient();
+  try {
+    await db.insert(shortLinks).values({
+      slug: slug.toLowerCase().trim(),
+      original_url,
+    });
 
-  const { error } = await supabase
-    .from('short_links')
-    .insert([
-      {
-        slug: slug.toLowerCase().trim(),
-        original_url,
-      },
-    ]);
-
-  if (error) {
-    if (error.code === '23505') {
+    revalidatePath('/dashboard');
+    return { success: true };
+  } catch (error: any) {
+    if (error.message.includes('unique')) {
       return { error: 'This slug already exists' };
     }
     return { error: error.message };
   }
-
-  revalidatePath('/dashboard');
-
-  return { success: true };
 }
 
 export async function deleteShortLink(id: string) {
-  const supabase = await createClient();
-
-  const { error } = await supabase
-    .from('short_links')
-    .delete()
-    .eq('id', id);
-
-  if (error) {
+  try {
+    await db.delete(shortLinks).where(eq(shortLinks.id, id));
+    revalidatePath('/dashboard');
+    return { success: true };
+  } catch (error: any) {
     return { error: error.message };
   }
-
-  revalidatePath('/dashboard');
-
-  return { success: true };
-}
-
-export async function getProjects() {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from('projects')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    return { error: error.message, data: [] };
-  }
-
-  return { data };
 }
 
 export async function getShortLinks() {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from('short_links')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) {
+  try {
+    const data = await db.query.shortLinks.findMany({
+      orderBy: [desc(shortLinks.created_at)],
+    });
+    return { data };
+  } catch (error: any) {
     return { error: error.message, data: [] };
   }
-
-  return { data };
 }
 
+// Stats
 export async function getDashboardStats() {
-  const supabase = await createClient();
+  try {
+    const projectsCount = (await db.select({ count: sql<number>`count(*)` }).from(projects))[0].count;
+    const linksCount = (await db.select({ count: sql<number>`count(*)` }).from(shortLinks))[0].count;
+    const totalClicks = (await db.select({ sum: sql<number>`sum(clicks)` }).from(shortLinks))[0].sum || 0;
+    const skillsCount = (await db.select({ count: sql<number>`count(*)` }).from(skills))[0].count;
+    const experiencesCount = (await db.select({ count: sql<number>`count(*)` }).from(experiences))[0].count;
 
-  const { count: projectsCount } = await supabase
-    .from('projects')
-    .select('*', { count: 'exact', head: true });
-
-  const { count: linksCount } = await supabase
-    .from('short_links')
-    .select('*', { count: 'exact', head: true });
-
-  const { data: clicksData } = await supabase
-    .from('short_links')
-    .select('clicks');
-
-  const totalClicks = clicksData?.reduce((acc, link) => acc + (link.clicks || 0), 0) || 0;
-
-  const { count: skillsCount } = await supabase
-    .from('skills')
-    .select('*', { count: 'exact', head: true });
-
-  const { count: experiencesCount } = await supabase
-    .from('experiences')
-    .select('*', { count: 'exact', head: true });
-
-  return {
-    projectsCount: projectsCount || 0,
-    linksCount: linksCount || 0,
-    totalClicks,
-    skillsCount: skillsCount || 0,
-    experiencesCount: experiencesCount || 0,
-  };
+    return {
+      projectsCount: Number(projectsCount),
+      linksCount: Number(linksCount),
+      totalClicks: Number(totalClicks),
+      skillsCount: Number(skillsCount),
+      experiencesCount: Number(experiencesCount),
+    };
+  } catch (error) {
+    return {
+      projectsCount: 0,
+      linksCount: 0,
+      totalClicks: 0,
+      skillsCount: 0,
+      experiencesCount: 0,
+    };
+  }
 }
 
 // About actions
 export async function getAbout() {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from('about')
-    .select('*')
-    .order('updated_at', { ascending: false })
-    .limit(1)
-    .single();
-
-  if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+  try {
+    const data = await db.query.about.findFirst({
+      orderBy: [desc(about.updated_at)],
+    });
+    return { data };
+  } catch (error: any) {
     return { error: error.message, data: null };
   }
-
-  return { data };
 }
 
 export async function createAbout(formData: FormData) {
@@ -274,61 +191,28 @@ export async function createAbout(formData: FormData) {
     return { error: 'Bio is required' };
   }
 
-  const supabase = await createClient();
-
-  let photo_url = null;
-
-  if (image && image.size > 0) {
-    const fileExt = image.name.split('.').pop();
-    const fileName = `about-${Date.now()}.${fileExt}`;
-    const filePath = `${fileName}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from('portfolio')
-      .upload(filePath, image, {
-        cacheControl: '3600',
-        upsert: false,
-      });
-
-    if (uploadError) {
-      return { error: uploadError.message };
+  try {
+    let photo_url = null;
+    if (image && image.size > 0) {
+      photo_url = await uploadImage(image);
     }
 
-    const { data: { publicUrl } } = supabase.storage
-      .from('portfolio')
-      .getPublicUrl(filePath);
+    // Modern approach: keep it simple, just insert. Or delete all then insert.
+    await db.delete(about);
+    
+    await db.insert(about).values({
+      bio,
+      photo_url,
+      updated_at: new Date(),
+    });
 
-    photo_url = publicUrl;
+    revalidatePath('/');
+    revalidatePath('/dashboard');
+
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message };
   }
-
-  // Delete existing about and insert new (only one entry)
-  const { error: deleteError } = await supabase
-    .from('about')
-    .delete()
-    .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all
-
-  if (deleteError) {
-    return { error: deleteError.message };
-  }
-
-  const { error: insertError } = await supabase
-    .from('about')
-    .insert([
-      {
-        bio,
-        photo_url,
-        updated_at: new Date().toISOString(),
-      },
-    ]);
-
-  if (insertError) {
-    return { error: insertError.message };
-  }
-
-  revalidatePath('/');
-  revalidatePath('/dashboard');
-
-  return { success: true };
 }
 
 // Skills actions
@@ -341,57 +225,39 @@ export async function createSkill(formData: FormData) {
     return { error: 'All fields are required' };
   }
 
-  const supabase = await createClient();
+  try {
+    await db.insert(skills).values({
+      name,
+      category,
+      level,
+    });
 
-  const { error } = await supabase
-    .from('skills')
-    .insert([
-      {
-        name,
-        category,
-        level,
-      },
-    ]);
-
-  if (error) {
+    revalidatePath('/dashboard');
+    return { success: true };
+  } catch (error: any) {
     return { error: error.message };
   }
-
-  revalidatePath('/dashboard');
-
-  return { success: true };
 }
 
 export async function deleteSkill(id: string) {
-  const supabase = await createClient();
-
-  const { error } = await supabase
-    .from('skills')
-    .delete()
-    .eq('id', id);
-
-  if (error) {
+  try {
+    await db.delete(skills).where(eq(skills.id, id));
+    revalidatePath('/dashboard');
+    return { success: true };
+  } catch (error: any) {
     return { error: error.message };
   }
-
-  revalidatePath('/dashboard');
-
-  return { success: true };
 }
 
 export async function getSkills() {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from('skills')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) {
+  try {
+    const data = await db.query.skills.findMany({
+      orderBy: [desc(skills.created_at)],
+    });
+    return { data };
+  } catch (error: any) {
     return { error: error.message, data: [] };
   }
-
-  return { data };
 }
 
 // Experiences actions
@@ -406,77 +272,53 @@ export async function createExperience(formData: FormData) {
     return { error: 'Title, company, start date, and description are required' };
   }
 
-  const supabase = await createClient();
+  try {
+    await db.insert(experiences).values({
+      title,
+      company,
+      start_date,
+      end_date: end_date || null,
+      description,
+    });
 
-  const { error } = await supabase
-    .from('experiences')
-    .insert([
-      {
-        title,
-        company,
-        start_date,
-        end_date: end_date || null,
-        description,
-      },
-    ]);
-
-  if (error) {
+    revalidatePath('/dashboard');
+    return { success: true };
+  } catch (error: any) {
     return { error: error.message };
   }
-
-  revalidatePath('/dashboard');
-
-  return { success: true };
 }
 
 export async function deleteExperience(id: string) {
-  const supabase = await createClient();
-
-  const { error } = await supabase
-    .from('experiences')
-    .delete()
-    .eq('id', id);
-
-  if (error) {
+  try {
+    await db.delete(experiences).where(eq(experiences.id, id));
+    revalidatePath('/dashboard');
+    return { success: true };
+  } catch (error: any) {
     return { error: error.message };
   }
-
-  revalidatePath('/dashboard');
-
-  return { success: true };
 }
 
 export async function getExperiences() {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from('experiences')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) {
+  try {
+    const data = await db.query.experiences.findMany({
+      orderBy: [desc(experiences.created_at)],
+    });
+    return { data };
+  } catch (error: any) {
     return { error: error.message, data: [] };
   }
-
-  return { data };
 }
 
 // SEO actions
 export async function getSeo() {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from('seo_settings')
-    .select('*')
-    .order('updated_at', { ascending: false })
-    .limit(1)
-    .single();
-
-  if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+  try {
+    const data = await db.query.seoSettings.findFirst({
+      orderBy: [desc(seoSettings.updated_at)],
+    });
+    return { data };
+  } catch (error: any) {
     return { error: error.message, data: null };
   }
-
-  return { data };
 }
 
 export async function createSeo(formData: FormData) {
@@ -491,89 +333,40 @@ export async function createSeo(formData: FormData) {
     return { error: 'Title and description are required' };
   }
 
-  const supabase = await createClient();
+  try {
+    let og_image_url = null;
+    let hero_bg_image_url = null;
 
-  let og_image_url = null;
-  let hero_bg_image_url = null;
-
-  if (og_image && og_image.size > 0) {
-    const fileExt = og_image.name.split('.').pop();
-    const fileName = `seo-og-${Date.now()}.${fileExt}`;
-    const filePath = `${fileName}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from('portfolio')
-      .upload(filePath, og_image, {
-        cacheControl: '3600',
-        upsert: false,
-      });
-
-    if (uploadError) {
-      return { error: uploadError.message };
+    if (og_image && og_image.size > 0) {
+      og_image_url = await uploadImage(og_image);
     }
 
-    const { data: { publicUrl } } = supabase.storage
-      .from('portfolio')
-      .getPublicUrl(filePath);
-
-    og_image_url = publicUrl;
-  }
-
-  if (hero_bg_image && hero_bg_image.size > 0) {
-    const fileExt = hero_bg_image.name.split('.').pop();
-    const fileName = `hero-bg-${Date.now()}.${fileExt}`;
-    const filePath = `${fileName}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from('portfolio')
-      .upload(filePath, hero_bg_image, {
-        cacheControl: '3600',
-        upsert: false,
-      });
-
-    if (uploadError) {
-      return { error: uploadError.message };
+    if (hero_bg_image && hero_bg_image.size > 0) {
+      hero_bg_image_url = await uploadImage(hero_bg_image);
     }
 
-    const { data: { publicUrl } } = supabase.storage
-      .from('portfolio')
-      .getPublicUrl(filePath);
+    await db.delete(seoSettings);
 
-    hero_bg_image_url = publicUrl;
+    const insertData: any = {
+      title,
+      description,
+      keywords: keywords || null,
+      twitter_card: twitter_card || null,
+      updated_at: new Date(),
+    };
+
+    if (og_image_url) insertData.og_image = og_image_url;
+    if (hero_bg_image_url) insertData.hero_bg_image = hero_bg_image_url;
+
+    await db.insert(seoSettings).values(insertData);
+
+    revalidatePath('/');
+    revalidatePath('/dashboard');
+
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message };
   }
-
-  // Delete existing seo and insert new (only one entry)
-  const { error: deleteError } = await supabase
-    .from('seo_settings')
-    .delete()
-    .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all
-
-  if (deleteError) {
-    return { error: deleteError.message };
-  }
-
-  const { error: insertError } = await supabase
-    .from('seo_settings')
-    .insert([
-      {
-        title,
-        description,
-        keywords: keywords || null,
-        og_image: og_image_url,
-        hero_bg_image: hero_bg_image_url,
-        twitter_card: twitter_card || null,
-        updated_at: new Date().toISOString(),
-      },
-    ]);
-
-  if (insertError) {
-    return { error: insertError.message };
-  }
-
-  revalidatePath('/');
-  revalidatePath('/dashboard');
-
-  return { success: true };
 }
 
 // Social links actions
@@ -586,57 +379,40 @@ export async function createSocialLink(formData: FormData) {
     return { error: 'Platform and URL are required' };
   }
 
-  const supabase = await createClient();
+  try {
+    await db.insert(socialLinks).values({
+      platform,
+      url,
+      icon: icon || null,
+    });
 
-  const { error } = await supabase
-    .from('social_links')
-    .insert([
-      {
-        platform,
-        url,
-        icon: icon || null,
-      },
-    ]);
+    revalidatePath('/');
+    revalidatePath('/dashboard');
 
-  if (error) {
+    return { success: true };
+  } catch (error: any) {
     return { error: error.message };
   }
-
-  revalidatePath('/');
-  revalidatePath('/dashboard');
-
-  return { success: true };
 }
 
 export async function deleteSocialLink(id: string) {
-  const supabase = await createClient();
-
-  const { error } = await supabase
-    .from('social_links')
-    .delete()
-    .eq('id', id);
-
-  if (error) {
+  try {
+    await db.delete(socialLinks).where(eq(socialLinks.id, id));
+    revalidatePath('/');
+    revalidatePath('/dashboard');
+    return { success: true };
+  } catch (error: any) {
     return { error: error.message };
   }
-
-  revalidatePath('/');
-  revalidatePath('/dashboard');
-
-  return { success: true };
 }
 
 export async function getSocialLinks() {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from('social_links')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) {
+  try {
+    const data = await db.query.socialLinks.findMany({
+      orderBy: [desc(socialLinks.created_at)],
+    });
+    return { data };
+  } catch (error: any) {
     return { error: error.message, data: [] };
   }
-
-  return { data };
 }
