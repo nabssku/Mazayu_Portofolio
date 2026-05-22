@@ -22,6 +22,7 @@ interface Project {
   title: string;
   description: string;
   image_url: string;
+  project_type: string;
   demo_link: string | null;
   created_at: Date | string;
 }
@@ -74,6 +75,7 @@ export function ProjectsTable({ projects }: ProjectsTableProps) {
                 <TableRow>
                   <TableHead>Title</TableHead>
                   <TableHead>Description</TableHead>
+                  <TableHead>Type</TableHead>
                   <TableHead>Demo Link</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -86,6 +88,11 @@ export function ProjectsTable({ projects }: ProjectsTableProps) {
                       {project.description.length > 50
                         ? `${project.description.substring(0, 50)}...`
                         : project.description}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="capitalize">
+                        {project.project_type}
+                      </Badge>
                     </TableCell>
                     <TableCell>
                       {project.demo_link ? (

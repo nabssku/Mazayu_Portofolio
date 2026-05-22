@@ -10,10 +10,11 @@ import { eq, desc, sql } from 'drizzle-orm';
 export async function createProject(formData: FormData) {
   const title = formData.get('title') as string;
   const description = formData.get('description') as string;
+  const project_type = formData.get('project_type') as string;
   const demo_link = formData.get('demo_link') as string;
   const image = formData.get('image') as File;
 
-  if (!title || !description || !image) {
+  if (!title || !description || !image || !project_type) {
     return { error: 'All fields are required' };
   }
 
@@ -24,6 +25,7 @@ export async function createProject(formData: FormData) {
       title,
       description,
       image_url,
+      project_type,
       demo_link: demo_link || null,
     });
 
@@ -51,11 +53,12 @@ export async function updateProject(formData: FormData) {
   const id = formData.get('id') as string;
   const title = formData.get('title') as string;
   const description = formData.get('description') as string;
+  const project_type = formData.get('project_type') as string;
   const demo_link = formData.get('demo_link') as string;
   const image = formData.get('image') as File;
 
-  if (!id || !title || !description) {
-    return { error: 'ID, title, and description are required' };
+  if (!id || !title || !description || !project_type) {
+    return { error: 'ID, title, description, and type are required' };
   }
 
   try {
@@ -67,6 +70,7 @@ export async function updateProject(formData: FormData) {
     const updateData: any = {
       title,
       description,
+      project_type,
       demo_link: demo_link || null,
     };
 

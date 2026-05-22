@@ -300,8 +300,9 @@ export default async function Home() {
                   key={project.id}
                   title={project.title}
                   description={project.description}
-                  tags={['Project']}
+                  tags={[project.project_type === 'web' ? 'Web App' : 'Mobile App']}
                   imageUrl={project.image_url}
+                  projectType={project.project_type}
                 />
               ))}
             </div>

@@ -22,6 +22,7 @@ interface Project {
   title: string;
   description: string;
   image_url: string;
+  project_type: string;
   demo_link: string | null;
   created_at: Date | string;
 }
@@ -37,6 +38,7 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
   const [formData, setFormData] = useState({
     title: project.title,
     description: project.description,
+    project_type: project.project_type,
     demo_link: project.demo_link || '',
   });
   const { toast } = useToast();
@@ -45,6 +47,7 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
     setFormData({
       title: project.title,
       description: project.description,
+      project_type: project.project_type,
       demo_link: project.demo_link || '',
     });
   }, [project]);
@@ -57,6 +60,7 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
     submitData.append('id', project.id);
     submitData.append('title', formData.title);
     submitData.append('description', formData.description);
+    submitData.append('project_type', formData.project_type);
     submitData.append('demo_link', formData.demo_link);
 
     // Add image if selected (optional for edit)
@@ -125,6 +129,20 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
               type="url"
               placeholder="https://example.com"
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="edit-project_type">Project Type</Label>
+            <select
+              id="edit-project_type"
+              value={formData.project_type}
+              onChange={(e) => setFormData(prev => ({ ...prev, project_type: e.target.value }))}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              required
+            >
+              <option value="web">Web (Macbook)</option>
+              <option value="mobile">Mobile (iPhone)</option>
+            </select>
           </div>
 
           <div className="space-y-2">
